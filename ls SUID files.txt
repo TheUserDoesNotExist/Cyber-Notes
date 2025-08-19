@@ -1,0 +1,12 @@
+find / -type f -perm -04000 -ls 2>/dev/null
+
+Parce que ça liste tous les fichiers qui ont le SUID activé sur le système.
+Ensuite, tu compares avec la base GTFOBins pour voir si l’un de ces fichiers est exploitable.
+
+
+EX : 
+
+Tu as trouvé que nano a le bit SUID.
+Ça veut dire que tu peux lancer nano /etc/shadow même si normalement ton utilisateur n’a pas le droit.
+Tu peux alors récupérer les hashs des mots de passe et les cracker avec John the Ripper (unshadow + john).
+Ou plus rapide : éditer /etc/passwd avec nano et ajouter un nouvel utilisateur avec UID=0 (root).

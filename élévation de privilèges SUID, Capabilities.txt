@@ -1,0 +1,66 @@
+📝 Note sur l’élévation de privilèges Linux : SUID & Capabilities
+🔹 1. SUID / SGID
+
+Définition :
+
+SUID (Set User ID) → exécute un binaire avec les droits du propriétaire (souvent root).
+
+SGID (Set Group ID) → exécute un binaire avec les droits du groupe propriétaire.
+
+Recherche de fichiers vulnérables :
+
+find / -type f -perm -04000 -ls 2>/dev/null   # SUID
+find / -type f -perm -02000 -ls 2>/dev/null   # SGID
+
+
+Exploitation possible :
+
+Lire/éditer des fichiers sensibles (/etc/shadow, /etc/passwd).
+
+Créer un utilisateur root dans /etc/passwd.
+
+Utiliser des binaires connus (GTFOBins → filtre “SUID”).
+
+🔹 2. Linux Capabilities
+
+Définition : Permettent d’attribuer des privilèges spécifiques à un programme sans lui donner tous les droits root.
+
+Exemples :
+
+cap_net_bind_service → ouvrir un port < 1024.
+
+cap_dac_override → ignorer les permissions de fichiers.
+
+cap_setuid → changer d’UID (→ root si mal configuré).
+
+Recherche de fichiers avec capabilities :
+
+getcap -r / 2>/dev/null
+
+
+Exploitation :
+
+Vérifier si le binaire est listé dans GTFOBins (filtre “Capabilities”).
+
+Exemple avec vim possédant des capabilities :
+
+vim -c ':!bash'                # ouvre un shell
+vim -c ':py3 import os; os.setuid(0); os.system("/bin/bash")'
+
+🔹 3. Méthodologie pratique (checklist)
+
+Lister les SUID/SGID.
+
+Lister les capabilities.
+
+Comparer avec GTFOBins.
+
+Tester exploitation directe (lecture/édition fichiers, exécution de shell).
+
+Si nécessaire :
+
+Dump /etc/shadow et cracker avec John.
+
+Modifier /etc/passwd pour ajouter un utilisateur root.
+
+👉 But final : Trouver un binaire mal configuré qui permet de devenir root sans connaître de mot de passe.

